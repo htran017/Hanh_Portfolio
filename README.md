@@ -20,7 +20,7 @@ Data Science Projects Portfolio
 
 
 # [Project 4: Logistic Regression Diabetes Classification using R](https://github.com/htran017/Hanh_Portfolio/blob/ddf650f92c629e8181f0516f4c6f81812f5819f4/DSC530_TermProject_HTran.ipynb)
--The objective of the dataset is to diagnostically predict whether or not a patient has diabetes, based on certain diagnostic measurements included in the dataset
+- The objective of the dataset is to diagnostically predict whether or not a patient has diabetes, based on certain diagnostic measurements included in the dataset
 ![](images/CDF.jpg)
 
 
@@ -34,16 +34,16 @@ Data Science Projects Portfolio
 
 
 # [Project 7: EDA using R](https://github.com/htran017/Hanh_Portfolio/blob/ddf650f92c629e8181f0516f4c6f81812f5819f4/TranHanh_DSC630_3.3_Assignment_dodgerpromo_R.ipynb)
--Determine what night would be the best to run a marketing promotion to increase attendance
+- Determine what night would be the best to run a marketing promotion to increase attendance
 ![](images/attendence.jpg)
 
 
 # [Project 8: Stock Market - Next Day Price Predictions](https://github.com/htran017/Hanh_Portfolio/blob/main/Tran_DSC630_projectPreliminary_Analysis.ipynb)
--Predict tommorrow's price of a stock based on historical data
+- Predict tommorrow's price of a stock based on historical data
 
 
 # [Project 9: Data Visualization](https://github.com/htran017/Hanh_Portfolio/blob/d4d62247736a992e1146174ae1ad4a09d688752d/DSC640_Treemap_areachart_stackedArea_usingR.ipynb)
--Create a Treemap, stacked area and area chart using R
+- Create a Treemap, stacked area and area chart using R
 ![](images/treemap.jpg)
 
 
