@@ -1,4 +1,4 @@
-# Hanh_Portfolio
+# Hanh Tran
 Data Science Projects Portfolio
 
 # [Project 1: Movie Recommender System: Project Overview](https://github.com/htran017/Hanh_Portfolio/blob/2cf3720d24330c186cc77c1b1dfb9a505aab64de/TranHanh_DSC680_Project1_MovieRecommender.ipynb)
