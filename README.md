@@ -13,8 +13,7 @@ Data Science Projects Portfolio
 ![](images/housevaluep2.jpg)
 
 
-# [Project 3: Loan Default Risk Classification Tensorflow Keras Overview]
-(https://github.com/htran017/Hanh_Portfolio/blob/ddf650f92c629e8181f0516f4c6f81812f5819f4/Tran_Hanh_DSC680_Project3_Keras_loanDefault.ipynb)
+# [Project 3: Loan Default Risk Classification Tensorflow Keras Overview](https://github.com/htran017/Hanh_Portfolio/blob/ddf650f92c629e8181f0516f4c6f81812f5819f4/Tran_Hanh_DSC680_Project3_Keras_loanDefault.ipynb)
 - This project will use tensorflow 2.0 Keras API to perform a classification task.
 - Determine if a new potential customer should be approved or denied a loan. 
 - ![](images/fullypaid.jpg)
