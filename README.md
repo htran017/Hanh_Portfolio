@@ -5,7 +5,7 @@ Data Science Projects Portfolio
 - Created a tool to recommend movies based on content-based methods. Content based is focused on the attributes of items and give a recommendation based on the similarity between them.
 - Spark.ml – supports model-based collaborative filtering 
 - ALS – Matrix Factorization approach to implement a recommendation algorithm to decompose item/user matrix into lower dimensional user factors and item factors
-
+![](/images/your_image.png)
 
 #[Project 2: Linear Regression Model using Tensorflow: House Price Prediction Overview]
 (https://github.com/htran017/Hanh_Portfolio/blob/ddf650f92c629e8181f0516f4c6f81812f5819f4/TranHanh_DSC680_Project2_Tensorflow_PredictHousing.ipynb)
