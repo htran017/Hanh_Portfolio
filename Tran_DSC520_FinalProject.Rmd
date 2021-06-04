@@ -1,0 +1,327 @@
+---
+title: "DSC520 Final Project"
+author: "Hanh Tran"
+Due date: "8/8/2020"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+The problem statement I am trying to address is determining which economic factors influence home prices and where should one buy a house based on those economic factors. Rather than looking at internal characteristics of a home to determine a home price, this analysis takes a look at a few external factors, unemployment rate, income per capita, property crime rate, number of hospitals, and school quality based on test scores and safety. 
+In summary, I collected data from multiple sources (see references) and took the average from time series, 1996-2020 or roughly the same period for the variables. I looked at the distribution of housing data, characteristics and relationships between the predictor variables and outcome variable, home price. Then I used regression to predict home prices. I found that income has the most influence on home prices while surprisingly, unemployment less so. This is relevant to our record home prices currently while so many are unemployed, there may be a delayed effect but that for another macroeconomic analysis.
+As this is for someone who is looking to buy but is not quite sure where to buy, the top states may interest them. The target audience of this analysis, companies such as Zillow and Redfin, may also be interested in hiring even more agents in the top states.Additionally, from a business perspective, companies like Zillow and Redfin have been interested in this kind of information to make their estimates on housing prices. 
+There are many limitations to this analysis. Since the variables are averaged, this make take out some of the granular information. In California for example, there are many neighborhoods that command a more premium cost for housing which might push up the average overall. School quality in this analysis was limited as many neighborhoods within cities, counties vary vastly due to socioeconomic constraints. 
+I believe this analysis can be improved through granularity in which there is a smaller focus by county rather. Additionally, in rescaling the size of the analysis, I could have applied other machine learning techniques such as KNN or cluster. 
+
+```{r include= FALSE, message= FALSE, warning=FALSE}
+library(ggplot2)
+library(QuantPsyc)
+library(Hmisc)
+library(car)
+library(pastecs)
+library(mlogit)
+library(caTools)
+```
+
+```{r include= FALSE, messages=FALSE, warning= FALSE}
+# import housing price data
+setwd("C:/Users/hanhk/RProjects/dsc520/projectData")
+homePrice_df <- read.csv('State_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_mon.csv')
+head(homePrice_df)
+
+
+```
+
+```{r messages=FALSE, warning= FALSE}
+# take average of home prices in time series from 1996 to June 2020 and remove na values in calc
+homePrice_df$home_avg <- rowMeans(homePrice_df[, c(6:299)], na.rm = TRUE)
+head(homePrice_df$home_avg)
+```
+
+
+```{r messages=FALSE, warning= FALSE}
+# import umemloyment, income, hospital, school and crime dataframes
+unemploy_df <- read.csv('unemploy.csv')
+income_df <- read.csv('income.csv')
+hospital_df <- read.csv('hospitals.csv')
+school_df <- read.csv('SchoolQuality.csv')
+crime_df <- read.csv('property_crimeRate.csv')
+head(unemploy_df)
+
+```
+```{r messages=FALSE, warning= FALSE}
+# take averages of variables from time series in dataframe 
+unemploy_df$unemploy_avg <- rowMeans(unemploy_df[, c(3:25)], na.rm = TRUE)
+income_df$inc_avg <- rowMeans(income_df[, c(3:26)], na.rm = TRUE)
+crime_df$crime_avg <- rowMeans(crime_df[, c(2:20)])
+head(unemploy_df$unemploy_avg)
+
+```
+
+```{r messages=FALSE, warning= FALSE}
+# create new dataframe of variables
+homePrice_mainDF <- data.frame(homePrice_df[,'state'], homePrice_df[,'home_avg'], unemploy_df[,'unemploy_avg'], income_df[, 'inc_avg'], crime_df[, 'crime_avg'], hospital_df[,'num_hospitals'], school_df[,'total_score'])
+head(homePrice_mainDF)
+
+```
+```{r messages=FALSE, warning= FALSE}
+# rename column names
+names(homePrice_mainDF)[1] <- "state"
+names(homePrice_mainDF)[2] <- "home_avg"
+names(homePrice_mainDF)[3] <- "unemploy_avg"
+names(homePrice_mainDF)[4] <- "inc_avg"
+names(homePrice_mainDF)[5] <- "crime_avg"
+names(homePrice_mainDF)[6] <- "num_hospital"
+names(homePrice_mainDF)[7] <- "total_score"
+```
+
+```{r messages=FALSE, warning= FALSE}
+head(homePrice_mainDF)
+```
+
+```{r messages=FALSE, warning= FALSE}
+str(homePrice_mainDF)
+nrow(homePrice_mainDF)
+ncol(homePrice_mainDF)
+```
+
+```{r messages=FALSE, warning= FALSE}
+stat.desc(homePrice_mainDF$home_avg, basic = TRUE,norm = TRUE)
+```
+```{r messages=FALSE, warning= FALSE, include=FALSE}
+# plot bar graph of the average prices of homes from 1996-2020 of each state
+avg_homePrice_barplot <- ggplot(data=homePrice_mainDF, aes(x=state, y=home_avg)) +
+  geom_bar(stat="identity", width=0.80)
+avg_homePrice_barplot 
+```
+
+Based on the barplot we see that the most expensive home prices on average from 1996-2020 are Hawaii, California, DC, Massachusettes
+
+
+```{r messages=FALSE, warning= FALSE}
+# rotate x-axis label for better visibility
+rotatelabel <- avg_homePrice_barplot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+rotatelabel
+
+```
+## Distribution of outcome variable
+```{r messages=FALSE, warning= FALSE}
+# check for the distribution of home prices
+hist_homePrices <- ggplot(homePrice_mainDF, aes(home_avg)) + geom_histogram(aes(y = ..density..), color = "black", fill = "gray") + labs(x="Prices", y = "Density") + ggtitle('Average Home Prices')
+hist_homePrices
+
+
+```
+
+
+```{r messages=FALSE, warning= FALSE}
+
+hist_homePrices + stat_function(fun = dnorm, args = list(mean = mean(homePrice_mainDF$home_avg, na.rm = TRUE), sd = sd(homePrice_mainDF$home_avg, na.rm = TRUE)), color = "black", size = 1)
+```
+Visually, we can see that the home prices have a slightly right hand tail indicating a right skew. More average prices are concentrated on the lower range less than the most expensive states such as, Hawaii, California, District of Columbia, Massachusettes
+
+```{r messages=FALSE, warning= FALSE}
+homePrices_norm <- qqnorm(homePrice_mainDF$home_avg)
+hsdegree_line <- qqline(homePrice_mainDF$home_avg)
+hsdegree_quantiles <- qqPlot(homePrice_mainDF$home_avg)
+warnings()
+
+```
+
+Based on the probability plot the distribution is not approximately normal. A normal probability plot is a plot for a continuous variable that helps to determine whether a sample is drawn from a normal distribution. It is probable that the most expensive states which are the 5 points off the line causing the deviation from the normal line.  
+If the data is drawn from a normal distribution, the points will fall approximately in a straight line. 
+If the data points deviate from a straight line in any systematic way, it suggests that the data is not drawn from a normal distribution.
+
+## Plotting Relationship between variables
+
+```{r messages=FALSE, warning= FALSE}
+
+ggplot(homePrice_mainDF, aes(x= unemploy_avg, y=inc_avg)) + geom_point() + geom_smooth()
+
+
+```
+
+
+```{r messages=FALSE, warning= FALSE}
+
+ggplot(homePrice_mainDF, aes(x= unemploy_avg, y=crime_avg)) + geom_point() + geom_smooth()
+
+
+```
+
+```{r messages=FALSE, warning= FALSE}
+
+ggplot(homePrice_mainDF, aes(x= num_hospital, y=total_score)) + geom_point() + geom_smooth()
+
+
+```
+
+
+
+```{r messages=FALSE, warning= FALSE}
+home_lm <-  lm(homePrice_mainDF$home_avg ~ homePrice_mainDF$crime_avg)
+summary(home_lm)
+
+```
+
+```{r messages=FALSE, warning= FALSE}
+# Creating predictions using `predict()`
+crime_predict_df <- data.frame(home_avg = predict(home_lm, homePrice_mainDF), crime=homePrice_mainDF$crime_avg)
+
+
+```
+
+
+```{r messages=FALSE, warning= FALSE}
+
+# Plot the predictions against the original data
+ggplot(data = homePrice_mainDF, aes(y = home_avg, x =crime_avg)) +
+  geom_point(color='blue') +
+  geom_line(color='red',data = crime_predict_df, aes(y=home_avg, x=crime))
+```
+
+```{r messages=FALSE, warning= FALSE}
+mean_earn <- mean(homePrice_mainDF$home_avg)
+## Corrected Sum of Squares Total
+sst <- sum((mean_earn - homePrice_mainDF$home_avg)^2)
+## Corrected Sum of Squares for Model
+ssm <- sum((mean_earn - crime_predict_df$home_avg)^2)
+## Residuals
+residuals <- homePrice_mainDF$home_avg - crime_predict_df$home_avg
+## Sum of Squares for Error
+sse <- sum(residuals^2)
+## R Squared R^2 = SSM\SST
+r_squared <- ssm/sst
+
+## Number of observations
+n <- nrow(homePrice_mainDF)
+n
+## Number of regression parameters
+p <- 2
+## Corrected Degrees of Freedom for Model (p-1)
+dfm <- p-1
+## Degrees of Freedom for Error (n-p)
+dfe <- n-p
+## Corrected Degrees of Freedom Total:   DFT = n - 1
+dft <- n-1
+
+## Mean of Squares for Model:   MSM = SSM / DFM
+msm <- ssm/dfm
+## Mean of Squares for Error:   MSE = SSE / DFE
+mse <- sse/dfe
+## Mean of Squares Total:   MST = SST / DFT
+mst <- sst/dft
+## F Statistic F = MSM/MSE
+f_score <- msm/mse
+
+## Adjusted R Squared R2 = 1 - (1 - R2)(n - 1) / (n - p)
+adjusted_r_squared <- 1 - ((1 - r_squared)*(n - 1)) / (n - p)
+adjusted_r_squared
+## Calculate the p-value from the F distribution
+p_value <- pf(f_score, dfm, dft, lower.tail=F)
+p_value
+```
+```{r messages=FALSE, warning= FALSE}
+home_lm <-  lm(homePrice_mainDF$home_avg ~ homePrice_mainDF$inc_avg)
+summary(home_lm)
+
+```
+```{r messages=FALSE, warning= FALSE}
+# Creating predictions using `predict()`
+inc_predict_df <- data.frame(home_avg = predict(home_lm, homePrice_mainDF), inc=homePrice_mainDF$inc_avg)
+# Plot the predictions against the original data
+ggplot(data = homePrice_mainDF, aes(y = home_avg, x =inc_avg)) +
+  geom_point(color='blue') +
+  geom_line(color='red',data = inc_predict_df, aes(y=home_avg, x=inc))
+
+```
+```{r messages=FALSE, warning= FALSE}
+mean_earn <- mean(homePrice_mainDF$home_avg)
+## Corrected Sum of Squares Total
+sst <- sum((mean_earn - homePrice_mainDF$home_avg)^2)
+## Corrected Sum of Squares for Model
+ssm <- sum((mean_earn - inc_predict_df$home_avg)^2)
+## Residuals
+residuals <- homePrice_mainDF$home_avg - inc_predict_df$home_avg
+## Sum of Squares for Error
+sse <- sum(residuals^2)
+## R Squared R^2 = SSM\SST
+r_squared <- ssm/sst
+
+## Number of observations
+n <- nrow(homePrice_mainDF)
+n
+## Number of regression parameters
+p <- 2
+## Corrected Degrees of Freedom for Model (p-1)
+dfm <- p-1
+## Degrees of Freedom for Error (n-p)
+dfe <- n-p
+## Corrected Degrees of Freedom Total:   DFT = n - 1
+dft <- n-1
+
+## Mean of Squares for Model:   MSM = SSM / DFM
+msm <- ssm/dfm
+## Mean of Squares for Error:   MSE = SSE / DFE
+mse <- sse/dfe
+## Mean of Squares Total:   MST = SST / DFT
+mst <- sst/dft
+## F Statistic F = MSM/MSE
+f_score <- msm/mse
+
+## Adjusted R Squared R2 = 1 - (1 - R2)(n - 1) / (n - p)
+adjusted_r_squared <- 1 - ((1 - r_squared)*(n - 1)) / (n - p)
+adjusted_r_squared
+## Calculate the p-value from the F distribution
+p_value <- pf(f_score, dfm, dft, lower.tail=F)
+p_value
+```
+```{r messages=FALSE, warning= FALSE}
+home_lm <-  lm(homePrice_mainDF$home_avg ~ homePrice_mainDF$unemploy_avg)
+summary(home_lm)
+
+```
+```{r messages=FALSE, warning= FALSE}
+# Creating predictions using `predict()`
+unemploy_predict_df <- data.frame(home_avg = predict(home_lm, homePrice_mainDF), unemploy=homePrice_mainDF$unemploy_avg)
+# Plot the predictions against the original data
+ggplot(data = homePrice_mainDF, aes(y = home_avg, x =unemploy_avg)) +
+  geom_point(color='blue') +
+  geom_line(color='red',data = unemploy_predict_df, aes(y=home_avg, x=unemploy))
+
+```
+```{r messages=FALSE, warning= FALSE}
+home_lm <-  lm(homePrice_mainDF$home_avg ~ homePrice_mainDF$total_score)
+summary(home_lm)
+
+```
+```{r messages=FALSE, warning= FALSE}
+home_lm <-  lm(homePrice_mainDF$home_avg ~ homePrice_mainDF$num_hospital)
+summary(home_lm)
+
+```
+
+
+#References
+1. housing price data:
+https://www.zillow.com/research/data/
+
+2. unemployment data:
+https://www.icip.iastate.edu/tables/employment/unemployment-states
+
+3. income data:
+https://www.icip.iastate.edu/tables/income
+
+https://apps.bea.gov/iTable/iTable.cfm?reqid=70&step=30&isuri=1&state=0&year=2018,2017,2016,2015,2014&13=70&11=-1&12=levels&category=430&year_end=-1&classification=naics&unit_of_measure=levels&statistic=10&tableid=30&area=xx&yearbegin=-1&area_type=0&3=naics&2=7&10=-1&1=11&0=711&7=10&6=-1&5=xx,19000&4=4&9=19000&8=33&major_area=0
+
+4. crime data:
+https://www.ucrdatatool.gov/
+
+5. hospital data:
+https://www.kaggle.com/carlosaguayo/usa-hospitals/version/1
+
+6. school data:
+School Dataset — USA Public Schools
+
+
+
